@@ -1,5 +1,7 @@
 'use strict'
 
+// Error handling in promises vs. async functions
+
 const promiseFn = (number) => {
   return new Promise((resolve, reject) => {
     if (number > 0) {
