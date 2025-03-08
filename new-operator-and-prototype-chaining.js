@@ -192,12 +192,18 @@ console.log(myNotInstance.variablesReversedAsArray());
 
 /*
  * What actually happens:
- *   - When calling the `variablesReversedAsArray` on the object, it searches
- *     for the function in what is set as `__proto__` and calls it with itself
- *     as the `this` context
- *   - When calls the `variablesAsArray` on the object, it searches for the
- *     function in what is set as `__proto__`, _doesn't_ find it, then it
- *     searches for it in  calls it with itself as the
+ *   - When calling the `variablesReversedAsArray` on the object, it
+ *       - searches for the function in itself -> doesn't find it (objects build
+ *         with `new` don't have their own functions unless you define these
+ *         functions in the constructor -> I show you how to do this at the end)
+ *       - searches in what is set as `__proto__` -> finds it
+ *       - calls it with itself as the `this` context
+ *   - When calls the `variablesAsArray` on the object, it
+ *       - searches for the function in itself -> doesn't find it
+ *       - searches in what is set as `__proto__` -> doesn't find it either
+ *       - searches in what is set as `__proto__` of `__proto__` -> finds it
+ *         (you see why it's called prototype chaining, right?)
+ *       - calls it with itself as the `this` context
  */
 
 console.log(myNotInstance.__proto__.variablesReversedAsArray.apply(myNotInstance));
@@ -212,9 +218,36 @@ console.log(myNotInstance.__proto__.__proto__.variablesAsArray.apply(myNotInstan
 
 theThisContext = {
   myFixedProperty: 'fixed',
-  myPassedProperty: 'passed'
+  myPassedProperty: 'passed',
+  myFunctionOnTheObjectItself: function() {
+    return 'I am defined on the object, not on the prototype';
+  }
 }
 console.log(MyChildConstructor.prototype.variablesReversedAsArray.apply(theThisContext));
 console.log(MyConstructor.prototype.variablesAsArray.apply(theThisContext));
+console.log(theThisContext.myFunctionOnTheObjectItself());
 // => [ 'dexif', 'dessap' ]
 // => [ 'fixed', 'passed' ]
+// => 'I am defined on the object, not on the prototype'
+
+/*
+ * Okay, you want to know how to do this "function on the object" thing with a
+ * constructor? Here you go:
+ */
+function ConstructorWithFunctionOnObject(passed) {
+  this.myFixedProperty = 'fixed';
+  this.myPassedProperty = passed;
+  this.myFunctionOnTheObjectItself = function() {
+    return 'I am defined on the object, not on the prototype';
+  }
+}
+const lastInstanceForToday = new ConstructorWithFunctionOnObject('passed');
+console.log(lastInstanceForToday.myFunctionOnTheObjectItself());
+// => 'I am defined on the object, not on the prototype'
+
+/*
+ * Is it a good idea? No, it's not. It's a waste of memory. If you have many
+ * objects which where build with this constructor, you will have many copies of
+ * the same function. If you define the function on the prototype, you only have
+ * one copy.
+ */
