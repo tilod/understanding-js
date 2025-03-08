@@ -10,10 +10,10 @@ class MyClass {
 }
 
 function MyClosure(value) {
-  let passedValue = value;
-  let nonPassedValue = 2;
+  const passedValue = value;
+  const nonPassedValue = 2;
 
-  let printValue = () => {
+  const printValue = () => {
     console.log(passedValue * nonPassedValue);
   };
 
