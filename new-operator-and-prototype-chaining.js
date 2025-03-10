@@ -1,3 +1,5 @@
+'use strict'
+
 /*
  * The `new` operator
  * ==================
@@ -11,7 +13,7 @@ function MyConstructor(passed) {
 /*
  * Using the `new` operator:
  */
-myInstanceWithNew = new MyConstructor('passed');
+const myInstanceWithNew = new MyConstructor('passed');
 
 /*
  * Mimic same behavior without using the `new` operator:
@@ -22,7 +24,7 @@ myInstanceWithNew = new MyConstructor('passed');
  *      `[Function: Object]` by default)
  *   3. Call the constructor with the new object as its `this` context
  */
-myInstanceWithoutNew = {}
+const myInstanceWithoutNew = {}
 myInstanceWithoutNew.__proto__ = MyConstructor.prototype;
 MyConstructor.apply(myInstanceWithoutNew, ['passed']);
 
@@ -31,7 +33,7 @@ MyConstructor.apply(myInstanceWithoutNew, ['passed']);
  * instead of using `apply`, you can also use `call` which is the same as
  * `apply` but with the arguments spread instead of an array
  */
-myInstanceWithoutNew2 = Object.create(MyConstructor.prototype);
+const myInstanceWithoutNew2 = Object.create(MyConstructor.prototype);
 MyConstructor.call(myInstanceWithoutNew2, 'passed');
 
 /*
@@ -216,7 +218,7 @@ console.log(myNotInstance.__proto__.__proto__.variablesAsArray.apply(myNotInstan
  * `theThisContext` is an object which resulted from a constructor call:
  */
 
-theThisContext = {
+const theThisContext = {
   myFixedProperty: 'fixed',
   myPassedProperty: 'passed',
   myFunctionOnTheObjectItself: function() {
