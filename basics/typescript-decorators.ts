@@ -10,8 +10,8 @@
  * Define a class decorator as a function which takes a function as argument.
  * The function is the constructor function defined by the `class` keyword.
  */
-function Logger(constructor: Function): void {
-  constructor.prototype.log = function (logMessage: string): void {
+function Logger(constructor: Function) {
+  constructor.prototype.log = function (logMessage: string) {
     console.log(logMessage);
   }
 }
@@ -20,9 +20,9 @@ function Logger(constructor: Function): void {
  * You can also pass arguments to the annotation. Define a function and return
  * the decorator as closure.
  */
-function LoggerWithPrefix(prefix: string): ClassDecorator {
-  return function (constructor: Function): void {
-    constructor.prototype.logWithPrefix = function (logMessage: string): void {
+function LoggerWithPrefix(prefix: string) {
+  return function (constructor: Function) {
+    constructor.prototype.logWithPrefix = function (logMessage: string) {
       console.log(`${prefix}: ${logMessage}`);
     }
   }
@@ -58,7 +58,7 @@ class DecoratorDemo {
   }
 
   @TraceExecution
-  greet(): string {
+  greet() {
     this.log(`Hello ${this.name}!`);
     this.logWithPrefix(`Hello ${this.name} again!`);
 
