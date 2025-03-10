@@ -221,31 +221,49 @@ console.log(myNotInstance.__proto__.__proto__.variablesAsArray.apply(myNotInstan
 const theThisContext = {
   myFixedProperty: 'fixed',
   myPassedProperty: 'passed',
-  myFunctionOnTheObjectItself: function() {
-    return 'I am defined on the object, not on the prototype';
-  }
 }
 console.log(MyChildConstructor.prototype.variablesReversedAsArray.apply(theThisContext));
 console.log(MyConstructor.prototype.variablesAsArray.apply(theThisContext));
-console.log(theThisContext.myFunctionOnTheObjectItself());
 // => [ 'dexif', 'dessap' ]
 // => [ 'fixed', 'passed' ]
-// => 'I am defined on the object, not on the prototype'
 
 /*
- * Okay, you want to know how to do this "function on the object" thing with a
- * constructor? Here you go:
+ * Now let's briefly talk about this "function on the object" thing:
+ */
+
+const objectWithOwnFunction = {
+  myFixedProperty: 'fixed',
+  myPassedProperty: 'passed',
+  myFunctionOnTheObjectItself: function() {
+    return this.myFixedProperty + '_' + this.myPassedProperty;
+  }
+}
+console.log(MyChildConstructor.prototype.variablesReversedAsArray.apply(objectWithOwnFunction));
+console.log(MyConstructor.prototype.variablesAsArray.apply(objectWithOwnFunction));
+console.log(objectWithOwnFunction.myFunctionOnTheObjectItself.apply(objectWithOwnFunction));
+// => [ 'dexif', 'dessap' ]
+// => [ 'fixed', 'passed' ]
+// => fixed_passed
+
+/*
+ * The last line is equivalent to:
+ */
+console.log(objectWithOwnFunction.myFunctionOnTheObjectItself());
+// => fixed_passed
+
+/*
+ * And this is how you do this using a constructor:
  */
 function ConstructorWithFunctionOnObject(passed) {
   this.myFixedProperty = 'fixed';
   this.myPassedProperty = passed;
   this.myFunctionOnTheObjectItself = function() {
-    return 'I am defined on the object, not on the prototype';
+    return this.myFixedProperty + '_' + this.myPassedProperty;
   }
 }
 const lastInstanceForToday = new ConstructorWithFunctionOnObject('passed');
 console.log(lastInstanceForToday.myFunctionOnTheObjectItself());
-// => 'I am defined on the object, not on the prototype'
+// fixed_passed
 
 /*
  * Is it a good idea? No, it's not. It's a waste of memory. If you have many
