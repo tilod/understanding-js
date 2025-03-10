@@ -1,118 +1,182 @@
-// Traditional approach:
-// Use the getter to read the property directly.
+/*
+ * Programming without return values
+ * =================================
+ *
+ * HINT: In this example we assume that JavaScript is a proper object-oriented
+ * language and use the respective terminology.
+ *
+ * Imagine a world without getters. Every method returns the instance it belongs
+ * to, nothing else. This makes method chaining very easy, but how
+ * can we fetch values from other instances?
+ */
 
-(function () {
-  class Address {
-    name: String;
-    street: String;
-    city: String;
+/*
+ * The traditional approach we used to know
+ *
+ * We have getters and read the values directly.
+ */
+class AddressTraditional {
+  readonly name: string;
+  readonly street: string;
+  readonly city: string;
 
-    constructor(name: String, street: String, city: String) {
-      this.name = name;
-      this.street = street;
-      this.city = city;
-    }
+  constructor(name: string, street: string, city: string) {
+    this.name = name;
+    this.street = street;
+    this.city = city;
+  }
+}
+
+class StreetPrinterTraditional {
+  private readonly address: AddressTraditional;
+
+  constructor(address: AddressTraditional) {
+    this.address = address;
   }
 
-  class StreetPrinter {
-    private address: Address;
+  print() {
+    console.log(
+      this.address.name + '\n' +
+      this.address.street + '\n' +
+      this.address.city
+    );
+  }
+}
 
-    constructor(address: Address) {
-      this.address = address;
-    }
+const addressTraditional =
+  new AddressTraditional("Sherlock Holmes", "221B Baker Street", "London");
+const printerTraditional = new StreetPrinterTraditional(addressTraditional);
+printerTraditional.print();
+// => Sherlock Holmes
+// => 221B Baker Street
+// => London
 
-    print(): void {
-      console.log(this.address.street);
-    }
+/*
+ * Without return values - Approach 1
+ *
+ * We use a defined setter on the instance which needs the data.
+ */
+interface HasAddressSetters {
+  setName(value: string): HasAddressSetters;
+  setStreet(value: string): HasAddressSetters;
+  setCity(value: string): HasAddressSetters;
+}
+
+class AddressApproach1 {
+  private readonly name: string;
+  private readonly  street: string;
+  private readonly city: string;
+
+  constructor(name: string, street: string, city: string) {
+    this.name = name;
+    this.street = street;
+    this.city = city;
   }
 
-  const address = new Address("Name", "Street", "City");
-  const printer = new StreetPrinter(address);
-  printer.print();
-})();
+  setAddressValuesOn(object: HasAddressSetters) {
+    object.setName(this.name).setStreet(this.street).setCity(this.city);
+    return this;
+  }
+}
 
-// Without return values, approach 1:
-// Use a defined setter on the object which needs the data.
+class StreetPrinterApproach1 implements HasAddressSetters {
+  private name!: string;
+  private street!: string;
+  private city!: string;
 
-(function () {
-  interface HasStreetSetter {
-    setStreet(street: String): void;
+  constructor(address: AddressApproach1) {
+    address.setAddressValuesOn(this);
   }
 
-  class Address {
-    private name: String;
-    private street: String;
-    private city: String;
-
-    constructor(name: String, street: String, city: String) {
-      this.name = name;
-      this.street = street;
-      this.city = city;
-    }
-
-    setStreetOn(object: HasStreetSetter): void {
-      object.setStreet(this.street);
-    }
+  setName(value: string) {
+    this.name = value;
+    return this;
   }
 
-  class StreetPrinter implements HasStreetSetter {
-    private street: String;
-
-    constructor(address: Address) {
-      address.setStreetOn(this);
-    }
-
-    setStreet(street: String): void {
-      this.street = street;
-    }
-
-    print() {
-      console.log(this.street);
-    }
+  setStreet(value: string) {
+    this.street = value;
+    return this;
   }
 
-  const address = new Address("Name", "Street", "City");
-  const printer = new StreetPrinter(address);
-  printer.print();
-})();
-
-// Without return values, approach 2:
-// Use a callback to set the data on the object which needs it.
-
-(function () {
-  class Address {
-    private name: String;
-    private street: String;
-    private city: String;
-
-    constructor(name: String, street: String, city: String) {
-      this.name = name;
-      this.street = street;
-      this.city = city;
-    }
-
-    setStreetOn(object: Object, callback: Function) {
-      callback.call(object, this.street);
-    }
+  setCity(value: string) {
+    this.city = value;
+    return this;
   }
 
-  class StreetPrinter {
-    private street: String;
+  print() {
+    console.log(
+      this.name + '\n' +
+      this.street + '\n' +
+      this.city
+    );
+    return this;
+  }
+}
 
-    constructor(address: Address) {
-      address.setStreetOn(this, this.setStreet);
-    }
+const addressApproach1 =
+  new AddressApproach1("Sherlock Holmes", "221B Baker Street", "London");
+const printerApproach1 = new StreetPrinterApproach1(addressApproach1);
+printerApproach1.print();
+// => Sherlock Holmes
+// => 221B Baker Street
+// => London
 
-    setStreet(street: String): void {
-      this.street = street;
-    }
+/*
+ * Without return values - Approach 2
+ *
+ * Instead of an interface, we use a callback to set the data on the instance
+ * which needs it.
+ */
+class AddressApproach2 {
+  private readonly name: string;
+  private readonly street: string;
+  private readonly city: string;
 
-    print(): void {
-      console.log(this.street);
-    }
+  constructor(name: string, street: string, city: string) {
+    this.name = name;
+    this.street = street;
+    this.city = city;
   }
 
-  const address = new Address("Name", "Street", "City");
-  const printer = new StreetPrinter(address);
-  printer.print();
-})();
+  setAddressValuesOn(
+    object: object,
+    callback: (name: string, street: string, city: string) => void
+  ) {
+    callback.call(object, this.name, this.street, this.city);
+    return this;
+  }
+}
+
+class StreetPrinterApproach2 {
+  private name!: string;
+  private street!: string;
+  private city!: string;
+
+  constructor(address: AddressApproach2) {
+    address.setAddressValuesOn(this, this.setValues);
+  }
+
+  setValues(name: string, street: string, city: string) {
+    this.name = name;
+    this.street = street;
+    this.city = city;
+    return this;
+  }
+
+  print() {
+    console.log(
+      this.name + '\n' +
+      this.street + '\n' +
+      this.city
+    );
+    return this;
+  }
+}
+
+const addressApproach2 =
+  new AddressApproach2("Sherlock Holmes", "221B Baker Street", "London");
+const printerApproach2 = new StreetPrinterApproach2(addressApproach2);
+printerApproach2.print();
+// => Sherlock Holmes
+// => 221B Baker Street
+// => London
