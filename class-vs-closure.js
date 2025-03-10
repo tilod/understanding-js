@@ -1,24 +1,45 @@
+'use strict'
+
+/*
+ * Classes and closures are the same!
+ * ==================================
+ */
+
+/*
+ + Member variables for classes are used to store state during the lifetime of
+ * an instance of the class.
+ */
 class MyClass {
   constructor(value) {
     this.passedValue = value;
-    this.nonPassedValue = 2;
+    this.fixedValue = 2;
   }
 
   printValue() {
-    console.log(this.passedValue * this.nonPassedValue);
+    console.log(this.passedValue * this.fixedValue);
   }
 }
 
+/*
+ * Closures are functions which
+ */
 function MyClosure(value) {
   const passedValue = value;
-  const nonPassedValue = 2;
+  const fixedValue = 2;
 
   const printValue = () => {
-    console.log(passedValue * nonPassedValue);
+    console.log(passedValue * fixedValue);
   };
 
   return { printValue };
 }
 
-new MyClass(3).printValue();
-MyClosure(3).printValue();
+/*
+ * You can use both the same way
+ */
+const myClassInstance = new MyClass(3);
+const myClosureInstance = MyClosure(3);
+myClassInstance.printValue();
+myClosureInstance.printValue();
+// => 6
+// => 6
