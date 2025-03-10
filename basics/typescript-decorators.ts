@@ -29,7 +29,8 @@ function LoggerWithPrefix(prefix: string): ClassDecorator {
 }
 
 /*
- *
+ * Define a method decorator as a function which takes a function (the method to
+ * decorate) and a context as arguments.
  *
  * This example uses the updated Decorator API, introduced in TypeScript 5.
  */
