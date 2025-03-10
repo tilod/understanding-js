@@ -39,6 +39,10 @@ function TraceExecution(method: Function, context: ClassMethodDecoratorContext) 
 
   return function (...args: any[]) {
     console.log(`Start: ${methodName}`);
+    // The TypeScript compiler shows a warning because `this` is untyped and
+    // implicitly declared as `any`. This is fine for us so we silence the
+    // warning with @ts-ignore.
+    // @ts-ignore
     const result = method.apply(this, args);
     console.log(`End: ${methodName}, Returning: ${result}`);
     return result;
@@ -59,7 +63,12 @@ class DecoratorDemo {
 
   @TraceExecution
   greet() {
+    // The TypeScript compiler shows warnings because it can't find the
+    // declaration of the dynamically added methods. We use @ts-ignore to
+    // silence them.
+    // @ts-ignore
     this.log(`Hello ${this.name}!`);
+    // @ts-ignore
     this.logWithPrefix(`Hello ${this.name} again!`);
 
     return this.name
