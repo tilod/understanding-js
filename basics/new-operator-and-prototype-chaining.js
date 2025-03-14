@@ -1,78 +1,186 @@
 'use strict'
 
 /*
- * The `new` operator
- * ==================
- */
-
-function MyConstructor(passed) {
-  this.myFixedProperty = 'fixed';
-  this.myPassedProperty = passed;
-}
-
-/*
- * Using the `new` operator:
- */
-const myInstanceWithNew = new MyConstructor('passed');
-
-/*
- * Mimic same behavior without using the `new` operator:
+ * Object-oriented vs. prototype-based
+ * ===================================
  *
- *   1. Create a new empty object
- *   2. Set `__proto__` of the new object to the constructor's prototype
- *      If you don't do this, `instance.constructor` will not be set (it's
- *      `[Function: Object]` by default)
- *   3. Call the constructor with the new object as its `this` context
+ * JavaScript is what's called an "classless object-oriented", or a
+ * "prototype-based" language. This means that there are no classes and
+ * instances of classes, just objects. These objects can be used as prototypes
+ * for other objects. More of that later.
+ *
+ * There are also no methods (i.e. functions which are declared on a class),
+ * just functions. However, these functions can be assigned to variables and
+ * passed around like any other value. They can also be attached to objects.
+ * When you call a function on an object, it _looks like_ you are calling a
+ * method on an instance of a class, but you are actually just calling a
+ * function with the object as the `this` context.
+ */
+
+const myFunction = function(greeting) {
+  console.log(greeting + ' ' + this.name);
+}
+const myObject = {
+  name: 'World',
+  myFunction: myFunction
+}
+myObject.myFunction('Hello');
+// => Hello World
+
+/*
+ * There are two other ways to call a function with a specific `this` context:
+ *
+ *   - `call` which takes the context as the first argument and the arguments
+ *     for the function as the following arguments
+ *   - `apply` which also takes the context as the first argument but the
+ *     arguments for the function as an array
+ *
+ * Mind that the context can be any object. As long as it has the correct
+ * properties (`name` in our example), it can be used as the context.
+ */
+myFunction.call({name: 'Alice'}, 'Hello');
+// => Hello Alice
+myFunction.apply({name: 'Bob'}, ['Hello']);
+// => Hello Bob
+
+/*
+ * Also worth mentioning is the `bind` function which returns a new function
+ * with the context bound to the object you pass to it. You will see this in
+ * many libraries and frameworks.
+ */
+const myBoundFunction = myFunction.bind({name: 'Charlie'});
+myBoundFunction('Hello');
+// => Hello Charlie
+
+/*
+ * Constructor functions and the `new` operator
+ * ============================================
+ *
+ * Constructor functions are used to create objects. Usually they are used to
+ * set the initial state of objects like constructors in "proper"
+ * object-oriented languages. They are named with a capital letter by
+ * convention. Otherwise, they are just functions like any other.
+ *
+ * The `new` operator is used to create an object from a constructor function.
+ */
+function MyConstructor(passedArgument) {
+  this.myFixedProperty = 'fixed';
+  this.myPassedProperty = passedArgument;
+}
+const myInstanceWithNew = new MyConstructor('passed');
+console.log(myInstanceWithNew);
+// => MyConstructor { myFixedProperty: 'fixed', myPassedProperty: 'passed' }
+
+/*
+ * To understand what happens under the hood, we mimic the same behavior
+ * without using the `new` operator:
+ *
+ *   1. Create a new empty object.
+ *   2. Set `__proto__` of the new object to the constructor's prototype.
+ *   3. Call the constructor with the new object as its `this` context.
  */
 const myInstanceWithoutNew = {}
 myInstanceWithoutNew.__proto__ = MyConstructor.prototype;
 MyConstructor.apply(myInstanceWithoutNew, ['passed']);
+console.log(myInstanceWithoutNew);
+// => MyConstructor { myFixedProperty: 'fixed', myPassedProperty: 'passed' }
 
 /*
- * The first two statements can be written as one using `Object.create`, and
- * instead of using `apply`, you can also use `call` which is the same as
- * `apply` but with the arguments spread instead of an array
+ * `__proto__` is a hidden property which is defined for all objects. It's
+ * a blank object for objects which are created with the object literal syntax.
+ */
+const emptyObject = {};
+console.log(emptyObject.__proto__);
+// => {}
+
+/*
+ * Likewise `prototype` is a hidden property which is defined for all functions.
+ * It's a blank object for functions which are created with the function
+ * literal syntax.
+ */
+const newFunction = function() { return 'whatever' };
+console.log(newFunction.prototype);
+// => {}
+
+/*
+ * What you will also see a lot is `Object.create`. It's just a shorthand for:
+ *
+ *     const myInstanceWithoutNew = {}
+ *     myInstanceWithoutNew.__proto__ = MyConstructor.prototype;
+ *
+ * And just for fun, we use `call` here instead of `apply`:
  */
 const myInstanceWithoutNew2 = Object.create(MyConstructor.prototype);
 MyConstructor.call(myInstanceWithoutNew2, 'passed');
+console.log(myInstanceWithoutNew2);
+// => MyConstructor { myFixedProperty: 'fixed', myPassedProperty: 'passed' }
 
 /*
- * Let's see if the instances are equal:
- */
-console.log(myInstanceWithNew, myInstanceWithNew.constructor);
-console.log(myInstanceWithoutNew, myInstanceWithoutNew.constructor);
-console.log(myInstanceWithoutNew2, myInstanceWithoutNew2.constructor);
-// They are all the same:
-// => MyConstructor { myFixedProperty: 'fixed', myPassedProperty: 'passed' } [Function: MyConstructor]
-
-/*
- * Let's examine the prototype of the constructor:
+ * Now let's examine the prototype of the constructor function further:
  */
 console.log(typeof MyConstructor.prototype);
 // => object
-// It's an object
+// It's an object (we know that already)
 console.log(MyConstructor.prototype);
 // => {}
-// Apparently an empty object, but ...
+// Apparently an empty object (we know that already too), but ...
 console.log(MyConstructor.prototype.constructor);
-// [Function: MyConstructor]
-// => ... the `constructor` property is hidden and set to the function
-
-/*
- * Let's bring it all together:
- */
-console.log(myInstanceWithNew.__proto__.constructor === MyConstructor.prototype.constructor);
-console.log(myInstanceWithNew.__proto__.constructor === MyConstructor);
+// => [Function: MyConstructor]
+// ... it has a hidden `constructor` property which is set to the constructor
+// function
 console.log(MyConstructor.prototype.constructor === MyConstructor);
-// => They are all the same!
+// => true
 
 /*
- * The `class` syntax
- * ==================
+ * This `constructor` is also set on the created object. If you don't use `new`,
+ * it will happen when you set the `__proto__` manually.
+ */
+console.log(myInstanceWithNew.constructor === MyConstructor);
+console.log(myInstanceWithoutNew.constructor === MyConstructor);
+// => true
+// => true
+
+/*
+ * Functions on objects
+ * ====================
+ *
+ * ... should be defined on the prototype of the object (which effectively means
+ * they are defined on the constructor function's prototype):
+ */
+MyConstructor.prototype.getVariablesAsArray = function() {
+  return [this.myFixedProperty, this.myPassedProperty];
+};
+const myNewInstance = new MyConstructor('passed');
+console.log(myNewInstance.getVariablesAsArray());
+// => [ 'fixed', 'passed' ]
+
+/*
+ * Mind that the function is actually defined on the prototype, _not_ on the
+ * object itself. This means that the function is shared between all objects
+ * created by the constructor. This saves memory.
+ */
+console.log(myNewInstance);
+console.log(myNewInstance.__proto__);
+// => MyConstructor { myFixedProperty: 'fixed', myPassedProperty: 'passed' }
+// => { variablesAsArray: [Function (anonymous)] }
+
+/*
+ * Reminder 1: This is different from the object we created at the beginning
+ * where the function was defined on the object itself.
+ */
+console.log(myObject);
+// => { name: 'World', myFunction: [Function: myFunction] }
+
+/*
+ * Reminder 2: But `this` is still the object (and not it's prototype) in both
+ * cases when calling the function. `this` is _dynamically_ bound to the object
+ * on which the function is called.
  */
 
 /*
- * Using the `class` syntax added in ES6:
+ * The `class` syntax introduced in ES6
+ *
+ * ... is just syntactic sugar for what we just saw.
  */
 class MyClass {
   constructor(passed) {
@@ -80,42 +188,72 @@ class MyClass {
     this.myPassedProperty = passed;
   }
 
-  variablesAsArray() {
+  getVariablesAsArray() {
     return [this.myFixedProperty, this.myPassedProperty];
   }
 }
 const myClassInstance = new MyClass('passed');
-console.log(myClassInstance.variablesAsArray());
+console.log(myClassInstance.getVariablesAsArray());
+console.log(myClassInstance);
+console.log(myClassInstance.constructor);
+console.log(myClassInstance.__proto__);
 // => [ 'fixed', 'passed' ]
-
-/*
- * Mimic same behavior without using the `class` syntax:
- *
- *  1. Create a constructor function (we already did this above)
- *  2. Add methods to the prototype of the constructor function
- */
-// function MyConstructor(passed) {
-//   this.myFixedProperty = 'fixed';
-//   this.myPassedProperty = passed;
-// }
-MyConstructor.prototype.variablesAsArray = function() {
-    return [this.myFixedProperty, this.myPassedProperty];
-};
-const myTheOldWayInstance = new MyConstructor('passed');
-console.log(myTheOldWayInstance.variablesAsArray());
-// => [ 'fixed', 'passed' ]
+// => MyClass { myFixedProperty: 'fixed', myPassedProperty: 'passed' }
+// => [class: MyClass]
 
 /*
  * Prototypical inheritance
  * ========================
+ *
+ *   1. Create a child constructor function which calls the parent constructor
+ *      (be sure to use `apply` or `call` to pass the `this` context)
+ *   2. Set the prototype of the child constructor to an object created with the
+ *      parent constructor's prototype.
+ *   3. Define the child's methods on its prototype
+ */
+function MyChildConstructor(passed) {
+  MyConstructor.apply(this, [passed]);
+}
+MyChildConstructor.prototype.__proto__ = Object.create(MyConstructor.prototype);
+MyChildConstructor.prototype.getVariablesReversedAsArray = function() {
+  return [
+    this.myFixedProperty.split('').reverse().join(''),
+    this.myPassedProperty.split('').reverse().join('')
+  ];
+};
+
+const myChildConstructorInstance = new MyChildConstructor('passed');
+console.log(myChildConstructorInstance.getVariablesAsArray());
+console.log(myChildConstructorInstance.getVariablesReversedAsArray());
+// => [ 'fixed', 'passed' ]
+// => [ 'dexif', 'dessap' ]
+
+/*
+ * Instead of creating a new object with `Object.create` and setting it as the
+ * prototype, you could also do:
+ *
+ *     MyChildConstructor.prototype = MyConstructor.prototype;
+ *
+ * But this would mean that changes to the child's prototype would also affect
+ * the parent's prototype. This is usually not what you want.
+ *
+ * You might even do:
+ *
+ *     MyChildConstructor.prototype = new MyConstructor();
+ *
+ * But this would call the parent constructor (with no arguments in this
+ * example), so be careful.
  */
 
+/*
+ * And now with the new `class` syntax
+ */
 class MyChildClass extends MyClass {
   constructor(passed) {
     super(passed);
   }
 
-  variablesReversedAsArray() {
+  getVariablesReversedAsArray() {
     return [
       this.myFixedProperty.split('').reverse().join(''),
       this.myPassedProperty.split('').reverse().join('')
@@ -124,150 +262,60 @@ class MyChildClass extends MyClass {
 }
 
 const myChildClassInstance = new MyChildClass('passed');
-console.log(myChildClassInstance.variablesAsArray());
-console.log(myChildClassInstance.variablesReversedAsArray());
+console.log(myChildClassInstance.getVariablesAsArray());
+console.log(myChildClassInstance.getVariablesReversedAsArray());
 // => [ 'fixed', 'passed' ]
 // => [ 'dexif', 'dessap' ]
 
 /*
- * Mimic same behavior without using the `class` syntax:
+ * The last bit: Function lookup
+ * ==============================
  *
- * 1. Create a child constructor function which calls the parent constructor
- *    (be sure to use `apply` or `call` to pass the `this` context)
- * 2. Set the prototype of the child constructor to an object created with the
- *    parent constructor's prototype
- * 3. Define the child's methods on its prototype
+ * When you call a function on an object, JavaScript first looks for the
+ * function on the object itself. If it doesn't find it, it looks on the
+ * prototype of the object. If it doesn't find it there, it looks on the
+ * prototype of the prototype, and so on.
+ *
+ * So when you do this (which looks a lot like object-orientation) ...
  */
-function MyChildConstructor(passed) {
-  MyConstructor.apply(this, [passed]);
-}
-MyChildConstructor.prototype.__proto__ = MyConstructor.prototype;
-// You can also do:
-//     MyChildConstructor.prototype = Object.create(MyConstructor.prototype);
-// You might even do:
-//     MyChildConstructor.prototype = new MyConstructor();
-// But this would call the parent constructor with no arguments, so be careful
-MyChildConstructor.prototype.variablesReversedAsArray = function() {
-  return [
-    this.myFixedProperty.split('').reverse().join(''),
-    this.myPassedProperty.split('').reverse().join('')
-  ];
-};
-
-const myChildConstructorInstance = new MyChildConstructor('passed');
-console.log(myChildConstructorInstance.variablesAsArray());
-console.log(myChildConstructorInstance.variablesReversedAsArray());
+const lastOne = new MyChildConstructor('passed');
+console.log(lastOne.getVariablesAsArray());
+console.log(lastOne.getVariablesReversedAsArray());
 // => [ 'fixed', 'passed' ]
 // => [ 'dexif', 'dessap' ]
+
+/*
+ * ... this is what actually happens:
+ */
+console.log(lastOne.__proto__.getVariablesReversedAsArray.apply(lastOne));
+console.log(lastOne.__proto__.__proto__.getVariablesAsArray.apply(lastOne));
+// => [ 'dexif', 'dessap' ]
+// => [ 'fixed', 'passed' ]
+// See why it's called "prototype chaining"?
+
+/*
+ * We can even break this up further and do it without "instantiating"
+ * anything, pretending that `theContext` is an object which resulted from a
+ * constructor call:
+ */
+const theContext = {
+  myFixedProperty: 'fixed',
+  myPassedProperty: 'passed',
+}
+console.log(MyChildConstructor.prototype.getVariablesReversedAsArray.apply(theContext));
+console.log(MyConstructor.prototype.getVariablesAsArray.apply(theContext));
+// => [ 'dexif', 'dessap' ]
+// => [ 'fixed', 'passed' ]
 
 /*
  * Bringing it all together: It's not really inheritance, but delegation!
  * ======================================================================
  *
- * There are not real classes in JavaScript and therefore no real instances.
+ * There are no real classes in JavaScript. "Instantiation" means creating a new
+ * object, "connecting" it to another object which acts as its "parent" and the
+ * calling the constructor "on it".
  *
- * We have:
- *   - functions and objects (basically key value stores)
- *   - objects can have functions as values -> this mimics methods of instances
- *   - functions can be used as constructors -> this mimics, well, constructors
- *   - functions have a prototype attached to them -> this enables them to
- *     "connect" objects when the function is used as a constructor
- *
- * So instantiation means creating a new empty object, "connecting" it to
- * another object which acts as its "parent" and the calling the constructor
- * "on it"
- *
- * Inheritance is achieved by chaining prototypes.
-
- * Objects delegate to other objects, passing their context (that thing which is
- * called `this`) with them.
- */
-
-/*
- * How you use it:
- */
-const myNotInstance = new MyChildConstructor('passed');
-console.log(myNotInstance.variablesAsArray());
-console.log(myNotInstance.variablesReversedAsArray());
-// => [ 'fixed', 'passed' ]
-// => [ 'dexif', 'dessap' ]
-
-/*
- * What actually happens:
- *   - When calling the `variablesReversedAsArray` on the object, it
- *       - searches for the function in itself -> doesn't find it (objects build
- *         with `new` don't have their own functions unless you define these
- *         functions in the constructor -> I show you how to do this at the end)
- *       - searches in what is set as `__proto__` -> finds it
- *       - calls it with itself as the `this` context
- *   - When calls the `variablesAsArray` on the object, it
- *       - searches for the function in itself -> doesn't find it
- *       - searches in what is set as `__proto__` -> doesn't find it either
- *       - searches in what is set as `__proto__` of `__proto__` -> finds it
- *         (you see why it's called prototype chaining, right?)
- *       - calls it with itself as the `this` context
- */
-
-console.log(myNotInstance.__proto__.variablesReversedAsArray.apply(myNotInstance));
-console.log(myNotInstance.__proto__.__proto__.variablesAsArray.apply(myNotInstance));
-// => [ 'dexif', 'dessap' ]
-// => [ 'fixed', 'passed' ]
-
-/*
- * And now all that without "instantiating" anything, pretending that
- * `theThisContext` is an object which resulted from a constructor call:
- */
-
-const theThisContext = {
-  myFixedProperty: 'fixed',
-  myPassedProperty: 'passed',
-}
-console.log(MyChildConstructor.prototype.variablesReversedAsArray.apply(theThisContext));
-console.log(MyConstructor.prototype.variablesAsArray.apply(theThisContext));
-// => [ 'dexif', 'dessap' ]
-// => [ 'fixed', 'passed' ]
-
-/*
- * Now let's briefly talk about this "function on the object" thing:
- */
-
-const objectWithOwnFunction = {
-  myFixedProperty: 'fixed',
-  myPassedProperty: 'passed',
-  myFunctionOnTheObjectItself: function() {
-    return this.myFixedProperty + '_' + this.myPassedProperty;
-  }
-}
-console.log(MyChildConstructor.prototype.variablesReversedAsArray.apply(objectWithOwnFunction));
-console.log(MyConstructor.prototype.variablesAsArray.apply(objectWithOwnFunction));
-console.log(objectWithOwnFunction.myFunctionOnTheObjectItself.apply(objectWithOwnFunction));
-// => [ 'dexif', 'dessap' ]
-// => [ 'fixed', 'passed' ]
-// => fixed_passed
-
-/*
- * The last line is equivalent to:
- */
-console.log(objectWithOwnFunction.myFunctionOnTheObjectItself());
-// => fixed_passed
-
-/*
- * And this is how you do this using a constructor:
- */
-function ConstructorWithFunctionOnObject(passed) {
-  this.myFixedProperty = 'fixed';
-  this.myPassedProperty = passed;
-  this.myFunctionOnTheObjectItself = function() {
-    return this.myFixedProperty + '_' + this.myPassedProperty;
-  }
-}
-const lastInstanceForToday = new ConstructorWithFunctionOnObject('passed');
-console.log(lastInstanceForToday.myFunctionOnTheObjectItself());
-// fixed_passed
-
-/*
- * Is it a good idea? No, it's not. It's a waste of memory. If you have many
- * objects which where build with this constructor, you will have many copies of
- * the same function. If you define the function on the prototype, you only have
- * one copy.
+ * Inheritance is achieved by chaining prototypes. Objects delegate to their
+ * parent object, passing their context (that thing which is called `this`) with
+ * them.
  */
