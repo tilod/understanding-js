@@ -4,7 +4,7 @@
  * Object-oriented vs. prototype-based
  * ===================================
  *
- * JavaScript is what's called an "classless object-oriented", or a
+ * JavaScript is what's called a "classless object-oriented", or a
  * "prototype-based" language. This means that there are no classes and
  * instances of classes, just objects. These objects can be used as prototypes
  * for other objects. More of that later.
@@ -17,15 +17,27 @@
  * function with the object as the `this` context.
  */
 
-const myFunction = function(greeting) {
+const greet = function(greeting) {
   console.log(greeting + ' ' + this.name);
 }
-const myObject = {
+const greeter = {
   name: 'World',
-  myFunction: myFunction
+  say: greet
 }
-myObject.myFunction('Hello');
+greeter.say('Hello');
 // => Hello World
+
+/*
+ * The `this` context is set when the function is called. It's not set when the
+ * function is defined. This means that you can call the function on different
+ * objects and the `this` context will be different.
+ */
+const guysGreeter = {
+  name: 'Guys',
+  say: greet
+}
+guysGreeter.say('Hello');
+// => Hello Guys
 
 /*
  * There are two other ways to call a function with a specific `this` context:
@@ -38,9 +50,9 @@ myObject.myFunction('Hello');
  * Mind that the context can be any object. As long as it has the correct
  * properties (`name` in our example), it can be used as the context.
  */
-myFunction.call({name: 'Alice'}, 'Hello');
+greet.call({name: 'Alice'}, 'Hello');
 // => Hello Alice
-myFunction.apply({name: 'Bob'}, ['Hello']);
+greet.apply({name: 'Bob'}, ['Hello']);
 // => Hello Bob
 
 /*
@@ -48,9 +60,20 @@ myFunction.apply({name: 'Bob'}, ['Hello']);
  * with the context bound to the object you pass to it. You will see this in
  * many libraries and frameworks.
  */
-const myBoundFunction = myFunction.bind({name: 'Charlie'});
-myBoundFunction('Hello');
+const boundGreetFunction = greet.bind({name: 'Charlie'});
+boundGreetFunction('Hello');
 // => Hello Charlie
+
+/*
+ * This disables the dynamic binding of `this` to the object on which the
+ * function is called.
+ */
+const otherContext = {
+  name: 'David',
+  sayBound: boundGreetFunction
+};
+console.log(otherContext.sayBound('Hello still'));
+// => Hello still Charlie
 
 /*
  * Constructor functions and the `new` operator
@@ -168,8 +191,8 @@ console.log(myNewInstance.__proto__);
  * Reminder 1: This is different from the object we created at the beginning
  * where the function was defined on the object itself.
  */
-console.log(myObject);
-// => { name: 'World', myFunction: [Function: myFunction] }
+console.log(greeter);
+// => { name: 'World', greet: [Function: greet] }
 
 /*
  * Reminder 2: But `this` is still the object (and not it's prototype) in both
