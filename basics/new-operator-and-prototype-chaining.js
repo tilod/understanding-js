@@ -7,30 +7,30 @@
  * JavaScript is what's called a "classless object-oriented", or a
  * "prototype-based" language. This means that there are no classes and
  * instances of classes, just objects. These objects can be used as prototypes
- * for other objects. More of that later.
+ * for other objects.
  *
  * There are also no methods (i.e. functions which are declared on a class),
- * just functions. However, these functions can be assigned to variables and
- * passed around like any other value. They can also be attached to objects.
- * When you call a function on an object, it _looks like_ you are calling a
- * method on an instance of a class, but you are actually just calling a
- * function with the object as the `this` context.
+ * just functions. These functions can be assigned to variables and passed
+ * around like any other value. They can also be assigned as properties of
+ * objects. When you call a function on an object, it _looks like_ you are
+ * calling a method on an instance of a class, but you are actually just calling
+ * a function with the object as the `this` context.
  */
 
 const greet = function(greeting) {
   console.log(greeting + ' ' + this.name);
 }
-const greeter = {
+const worldGreeter = {
   name: 'World',
   say: greet
 }
-greeter.say('Hello');
+worldGreeter.say('Hello');
 // => Hello World
 
 /*
- * The `this` context is set when the function is called. It's not set when the
- * function is defined. This means that you can call the function on different
- * objects and the `this` context will be different.
+ * The `this` context is set when the function is called, not when the function
+ * is defined. This means that you can call the function on different objects
+ * and the `this` context will be different.
  */
 const guysGreeter = {
   name: 'Guys',
@@ -79,12 +79,12 @@ console.log(otherContext.sayBound('Hello still'));
  * Constructor functions and the `new` operator
  * ============================================
  *
- * Constructor functions are used to create objects. Usually they are used to
- * set the initial state of objects like constructors in "proper"
- * object-oriented languages. They are named with a capital letter by
+ * Constructor functions (or "constructors" for short) are used to create
+ * objects. Usually they set the initial state of objects like constructors in
+ * "proper" object-oriented languages. They are named with a capital letter by
  * convention. Otherwise, they are just functions like any other.
  *
- * The `new` operator is used to create an object from a constructor function.
+ * The `new` operator is used to create an object from a constructor.
  */
 function MyConstructor(passedArgument) {
   this.myFixedProperty = 'fixed';
@@ -110,7 +110,7 @@ console.log(myInstanceWithoutNew);
 
 /*
  * `__proto__` is a hidden property which is defined for all objects. It's
- * a blank object for objects which are created with the object literal syntax.
+ * an empty object for objects which are created with the object literal syntax.
  */
 const emptyObject = {};
 console.log(emptyObject.__proto__);
@@ -118,7 +118,7 @@ console.log(emptyObject.__proto__);
 
 /*
  * Likewise `prototype` is a hidden property which is defined for all functions.
- * It's a blank object for functions which are created with the function
+ * It's a empty object for functions which are created with the function
  * literal syntax.
  */
 const newFunction = function() { return 'whatever' };
@@ -128,7 +128,7 @@ console.log(newFunction.prototype);
 /*
  * What you will also see a lot is `Object.create`. It's just a shorthand for:
  *
- *     const myInstanceWithoutNew = {}
+ *     const myInstanceWithoutNew = {};
  *     myInstanceWithoutNew.__proto__ = MyConstructor.prototype;
  *
  * And just for fun, we use `call` here instead of `apply`:
@@ -156,7 +156,7 @@ console.log(MyConstructor.prototype.constructor === MyConstructor);
 
 /*
  * This `constructor` is also set on the created object. If you don't use `new`,
- * it will happen when you set the `__proto__` manually.
+ * this happens when you assign `__proto__` manually.
  */
 console.log(myInstanceWithNew.constructor === MyConstructor);
 console.log(myInstanceWithoutNew.constructor === MyConstructor);
@@ -168,7 +168,7 @@ console.log(myInstanceWithoutNew.constructor === MyConstructor);
  * ====================
  *
  * ... should be defined on the prototype of the object (which effectively means
- * they are defined on the constructor function's prototype):
+ * they are defined on the constructor's prototype):
  */
 MyConstructor.prototype.getVariablesAsArray = function() {
   return [this.myFixedProperty, this.myPassedProperty];
@@ -191,17 +191,18 @@ console.log(myNewInstance.__proto__);
  * Reminder 1: This is different from the object we created at the beginning
  * where the function was defined on the object itself.
  */
-console.log(greeter);
-// => { name: 'World', greet: [Function: greet] }
+console.log(worldGreeter);
+// => { name: 'World', say: [Function: greet] }
 
 /*
  * Reminder 2: But `this` is still the object (and not it's prototype) in both
- * cases when calling the function. `this` is _dynamically_ bound to the object
- * on which the function is called.
+ * cases when calling the function. Remember, `this` is dynamically bound to the
+ * object on which the function is called.
  */
 
 /*
  * The `class` syntax introduced in ES6
+ * ====================================
  *
  * ... is just syntactic sugar for what we just saw.
  */
@@ -227,6 +228,8 @@ console.log(myClassInstance.__proto__);
 /*
  * Prototypical inheritance
  * ========================
+ *
+ * Let's do it the old way first:
  *
  *   1. Create a child constructor function which calls the parent constructor
  *      (be sure to use `apply` or `call` to pass the `this` context)
@@ -258,7 +261,7 @@ console.log(myChildConstructorInstance.getVariablesReversedAsArray());
  *     MyChildConstructor.prototype = MyConstructor.prototype;
  *
  * But this would mean that changes to the child's prototype would also affect
- * the parent's prototype. This is usually not what you want.
+ * the parent's prototype and vice versa. This is usually not what you want.
  *
  * You might even do:
  *
@@ -269,7 +272,7 @@ console.log(myChildConstructorInstance.getVariablesReversedAsArray());
  */
 
 /*
- * And now with the new `class` syntax
+ * And now with the new `class` syntax:
  */
 class MyChildClass extends MyClass {
   constructor(passed) {
@@ -335,8 +338,8 @@ console.log(MyConstructor.prototype.getVariablesAsArray.apply(theContext));
  * ======================================================================
  *
  * There are no real classes in JavaScript. "Instantiation" means creating a new
- * object, "connecting" it to another object which acts as its "parent" and the
- * calling the constructor "on it".
+ * object, "connecting" it to another object which acts as its "parent" and
+ * calling the constructor on it.
  *
  * Inheritance is achieved by chaining prototypes. Objects delegate to their
  * parent object, passing their context (that thing which is called `this`) with
